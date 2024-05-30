@@ -34,16 +34,16 @@ participants:
     v_min_mem: 0
     v_max_mem: 0
     count: 2
-    # prometheus_config:
-    #   scrape_interval: 15s
-    #   labels: {}
+    prometheus_config:
+      scrape_interval: 15s
+      labels: {}
     blobber_enabled: false
     blobber_extra_params: []
 
 network_params:
   network_id: "3151908"
   deposit_contract_address: "0x4242424242424242424242424242424242424242"
-  seconds_per_slot: 2
+  seconds_per_slot: 12
   num_validator_keys_per_node: 64
   preregistered_validator_keys_mnemonic:
     "giant issue aisle success illegal bike spike
@@ -64,28 +64,27 @@ additional_services:
   - tx_spammer
   - blob_spammer
   - el_forkmon
-  # - beacon_metrics_gazer
+  - beacon_metrics_gazer
   - dora
-  # - prometheus_grafana
+  - prometheus_grafana
 wait_for_finalization: false
 global_client_log_level: info
 snooper_enabled: false
 ethereum_metrics_exporter_enabled: false
 parallel_keystore_generation: false
-mev_type: full
+mev_type: full-gramine
 mev_params:
-  mev_builder_image: prof-project/builder-prof-merger
-  # mev_relay_image: flashbots/mev-boost-relay
+  mev_relay_image: prof-relay
   mev_relay_api_extra_args: []
   mev_relay_housekeeper_extra_args: []
   mev_relay_website_extra_args: []
   mev_builder_extra_args: []
-  # mev_builder_prometheus_config:
-  #   scrape_interval: 15s
-  #   labels: {}
+  mev_builder_prometheus_config:
+    scrape_interval: 15s
+    labels: {}
   mev_flood_image: flashbots/mev-flood
   mev_flood_extra_args: []
-  mev_flood_seconds_per_bundle: 1
+  mev_flood_seconds_per_bundle: 15
   mev_boost_image: flashbots/mev-boost
   mev_boost_args: ["mev-boost", "--relay-check"]
 grafana_additional_dashboards: []

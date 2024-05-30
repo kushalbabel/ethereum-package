@@ -1,0 +1,68 @@
+
+services:
+  builder:
+    image: geth-sgx-builder:local
+    build:
+      context: ./
+      dockerfile: builder.Dockerfile
+      args:
+        ENCLAVE_SIZE: "${ENCLAVE_SIZE-4G}"
+        SEPOLIA: "0"
+        LOCALNET: "1"
+        RA_CLIENT_SPID: $RA_CLIENT_SPID
+        RA_CLIENT_LINKABLE: $RA_CLIENT_LINKABLE
+        SGX: "${SGX-1}"
+        RA_TYPE: "${RA_TYPE-dcap}"
+        GETH_COMMIT: b996797152374040b989091e9aa4a9f5bcf7e8ea
+        GRAMINE_IMG_TAG: $GRAMINE_IMG_TAG
+    ports:
+      - 28545:28545
+      - 8551:8551
+      - 8545:8545
+    depends_on:
+      aesmd:
+        condition: service_started
+    # NOTE set SGX_DRIVER in your .env file to "oot" or "inkernel"
+    # see README for more details
+    extends:
+      file: sgx-driver.yml
+      service: ${SGX_DRIVER}-enclave-devices
+    environment:
+      RA_CLIENT_SPID: $RA_CLIENT_SPID
+      RA_CLIENT_LINKABLE: $RA_CLIENT_LINKABLE
+      RA_TLS_EPID_API_KEY: $RA_TLS_EPID_API_KEY
+      SGX: "${SGX-1}"
+      DEBUG: "${DEBUG-1}"
+      BUILDER_TX_SIGNING_KEY: "0x39725efee3fb28614de3bacaffe4cc4bd8c436257e2c8bb887c4b5c4be45e76d"
+    volumes:
+      - aesmd-socket:/var/run/aesmd
+      - ./network/genesis/network-configs/:/etc/genesis/
+      - ./network/jwt/:/etc/jwt/
+      - ./network/shared_data/:/shared
+    networks:
+      - kurtosis
+
+  aesmd:
+    image: ghcr.io/initc3/sgx-aesm:2.19-buster-81eb0d3
+    volumes:
+      - aesmd-socket:/var/run/aesmd
+    # NOTE set SGX_DRIVER in your .env file to "oot" or "inkernel"
+    # see README for more details
+    extends:
+      file: sgx-driver.yml
+      service: ${SGX_DRIVER}-enclave-devices
+    networks:
+      - kurtosis
+
+
+volumes:
+  aesmd-socket:
+    driver: local
+    driver_opts:
+      type: "tmpfs"
+      device: "tmpfs"
+      o: "rw"
+networks:
+  kurtosis:
+    name: kt-prof-testnet
+    external: true

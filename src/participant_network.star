@@ -434,6 +434,10 @@ def launch_participant_network(
             ),
             "launch_method": nimbus_eth1.launch,
         },
+        constants.EL_CLIENT_TYPE.None: {
+            "launcher": None,
+            "launch_method": None,
+        },
     }
 
     all_el_client_contexts = []
@@ -462,36 +466,47 @@ def launch_participant_network(
 
         # Zero-pad the index using the calculated zfill value
         index_str = shared_utils.zfill_custom(index + 1, len(str(len(participants))))
-
         el_service_name = "el-{0}-{1}-{2}".format(
             index_str, el_client_type, cl_client_type
         )
+        if launch_method != None:
+            el_client_context = launch_method(
+                plan,
+                el_launcher,
+                el_service_name,
+                participant.el_client_image,
+                participant.el_client_log_level,
+                global_log_level,
+                all_el_client_contexts,
+                participant.el_min_cpu,
+                participant.el_max_cpu,
+                participant.el_min_mem,
+                participant.el_max_mem,
+                participant.el_extra_params,
+                participant.el_extra_env_vars,
+                participant.el_extra_labels,
+                persistent,
+                participant.el_client_volume_size,
+                tolerations,
+                node_selectors,
+            )
 
-        el_client_context = launch_method(
-            plan,
-            el_launcher,
-            el_service_name,
-            participant.el_client_image,
-            participant.el_client_log_level,
-            global_log_level,
-            all_el_client_contexts,
-            participant.el_min_cpu,
-            participant.el_max_cpu,
-            participant.el_min_mem,
-            participant.el_max_mem,
-            participant.el_extra_params,
-            participant.el_extra_env_vars,
-            participant.el_extra_labels,
-            persistent,
-            participant.el_client_volume_size,
-            tolerations,
-            node_selectors,
-        )
-
-        # Add participant el additional prometheus metrics
-        for metrics_info in el_client_context.el_metrics_info:
-            if metrics_info != None:
-                metrics_info["config"] = participant.prometheus_config
+            # Add participant el additional prometheus metrics
+            for metrics_info in el_client_context.el_metrics_info:
+                if metrics_info != None:
+                    metrics_info["config"] = participant.prometheus_config
+        else :
+            el_client_context = struct(
+                service_name=participant.el_addr,
+                client_name=participant.el_addr,
+                enode="",
+                ip_addr=participant.el_addr,
+                rpc_port_num=participant.el_rpc_port,
+                ws_port_num=participant.el_ws_port,
+                engine_rpc_port_num=participant.el_engine_rpc_port,
+                el_metrics_info=None,
+            )
+            plan.print("skipping el_client_context {}".format(el_service_name))
 
         all_el_client_contexts.append(el_client_context)
 

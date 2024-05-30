@@ -7,6 +7,7 @@ EL_CLIENT_TYPE = struct(
     reth="reth",
     ethereumjs="ethereumjs",
     nimbus="nimbus",
+    None="none",
 )
 
 CL_CLIENT_TYPE = struct(

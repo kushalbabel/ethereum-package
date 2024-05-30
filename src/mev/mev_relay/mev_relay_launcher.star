@@ -101,6 +101,8 @@ def launch_mev_relay(
         "DB_TABLE_PREFIX": "custom",
     }
 
+    plan.print("builder_uri {0}".format(builder_uri))
+
     redis_url = "{}:{}".format(redis.hostname, redis.port_number)
     postgres_url = postgres.url + "?sslmode=disable"
     plan.add_service(

@@ -12,6 +12,7 @@ DEFAULT_EL_IMAGES = {
     "reth": "ghcr.io/paradigmxyz/reth",
     "ethereumjs": "ethpandaops/ethereumjs:master",
     "nimbus": "ethpandaops/nimbus-eth1:master",
+    "none": None,
 }
 
 DEFAULT_CL_IMAGES = {
@@ -140,7 +141,7 @@ def input_parser(plan, input_args):
     if result.get("disable_peer_scoring"):
         result = enrich_disable_peer_scoring(result)
 
-    if result.get("mev_type") in ("mock", "full"):
+    if result.get("mev_type") in ("mock", "full", "full-gramine"):
         result = enrich_mev_extra_params(
             result,
             MEV_BOOST_SERVICE_NAME_PREFIX,
@@ -149,7 +150,7 @@ def input_parser(plan, input_args):
         )
 
     if (
-        result.get("mev_type") == "full"
+        result.get("mev_type") in ("full", "full-gramine")
         and result["network_params"]["capella_fork_epoch"] == 0
         and result["mev_params"]["mev_relay_image"]
         == MEV_BOOST_RELAY_IMAGE_NON_ZERO_CAPELLA
@@ -164,6 +165,10 @@ def input_parser(plan, input_args):
         participants=[
             struct(
                 el_client_type=participant["el_client_type"],
+                el_addr=participant["el_addr"],
+                el_rpc_port=participant["el_rpc_port"],
+                el_ws_port=participant["el_ws_port"],
+                el_engine_rpc_port=participant["el_engine_rpc_port"],
                 el_client_image=participant["el_client_image"],
                 el_client_log_level=participant["el_client_log_level"],
                 el_client_volume_size=participant["el_client_volume_size"],
@@ -603,12 +608,17 @@ def default_network_params():
         "network": "kurtosis",
         "min_validator_withdrawability_delay": 256,
         "shard_committee_period": 256,
+        "timeout": "20m",
     }
 
 
 def default_participant():
     return {
         "el_client_type": "geth",
+        "el_addr": "",
+        "el_rpc_port": "",
+        "el_ws_port": "",
+        "el_engine_rpc_port": "",
         "el_client_image": "",
         "el_client_log_level": "",
         "el_client_volume_size": 0,
@@ -830,6 +840,32 @@ def enrich_mev_extra_params(parsed_arguments_dict, mev_prefix, mev_port, mev_typ
                     "BUILDER_TX_SIGNING_KEY": "0x"
                     + genesis_constants.PRE_FUNDED_ACCOUNTS[0].private_key
                 },
+                "validator_count": 0,
+                "prometheus_config": parsed_arguments_dict["mev_params"][
+                    "mev_builder_prometheus_config"
+                ],
+            }
+        )
+
+        parsed_arguments_dict["participants"].append(mev_participant)
+    if mev_type == "full-gramine":
+        mev_participant = default_participant()
+        mev_participant.update(
+            {
+                "el_client_type": "none",
+                "el_addr": "builder",
+                "el_rpc_port": "8545",
+                "el_ws_port": "8546",
+                "el_engine_rpc_port": "8551",
+                "cl_client_image": parsed_arguments_dict["mev_params"][
+                    "mev_builder_cl_image"
+                ],
+                "beacon_extra_params": [
+                    "--always-prepare-payload",
+                    "--prepare-payload-lookahead",
+                    "12000",
+                    "--disable-peer-scoring",
+                ],
                 "validator_count": 0,
                 "prometheus_config": parsed_arguments_dict["mev_params"][
                     "mev_builder_prometheus_config"

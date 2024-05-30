@@ -48,6 +48,7 @@ HTTP_PORT_ID_FOR_FACT = "http"
 MEV_BOOST_SHOULD_CHECK_RELAY = True
 MOCK_MEV_TYPE = "mock"
 FULL_MEV_TYPE = "full"
+FULL_GRAMINE_MEV_TYPE = "full-gramine"
 PATH_TO_PARSED_BEACON_STATE = "/genesis/output/parsedBeaconState.json"
 
 
@@ -153,6 +154,7 @@ def run(plan, args={}):
     mev_endpoints = []
     # passed external relays get priority
     # perhaps add mev_type External or remove this
+    plan.print("MEV type {0}".format(args_with_right_defaults.mev_type) )
     if (
         hasattr(participant, "builder_network_params")
         and participant.builder_network_params != None
@@ -181,7 +183,7 @@ def run(plan, args={}):
         mev_endpoints.append(endpoint)
     elif (
         args_with_right_defaults.mev_type
-        and args_with_right_defaults.mev_type == FULL_MEV_TYPE
+        and args_with_right_defaults.mev_type in (FULL_MEV_TYPE, FULL_GRAMINE_MEV_TYPE)
     ):
         builder_uri = "http://{0}:{1}".format(
             all_el_client_contexts[-1].ip_addr, all_el_client_contexts[-1].rpc_port_num

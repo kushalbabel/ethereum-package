@@ -40,6 +40,7 @@ def launch_prometheus(
     prometheus_url = prometheus.run(
         plan,
         metrics_jobs,
+        "prometheus",
         MIN_CPU,
         MAX_CPU,
         MIN_MEMORY,
@@ -61,7 +62,7 @@ def get_metrics_jobs(
     metrics_jobs = []
     # Adding execution clients metrics jobs
     for context in el_client_contexts:
-        if len(context.el_metrics_info) >= 1 and context.el_metrics_info[0] != None:
+        if context.el_metrics_info != None and len(context.el_metrics_info) >= 1 and context.el_metrics_info[0] != None:
             execution_metrics_info = context.el_metrics_info[0]
             scrape_interval = PROMETHEUS_DEFAULT_SCRAPE_INTERVAL
             labels = {

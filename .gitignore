@@ -87,3 +87,7 @@ yarn-error.log
 
 # enclave dumps
 dump/
+
+# docker compose 
+gramine-builder/network/
+gramine-builder/.env
